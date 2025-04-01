@@ -1,6 +1,6 @@
 const express = require('express');
 require("dotenv").config();
-require("./src/config/database")
+const {connectDB}=require("./src/config/database");
 
 const app = express();
 
@@ -11,4 +11,9 @@ app.get("/", (req, res) => {
     res.send("Hey yo");
 });
 
-app.listen(4000, () => console.log("Backend Started on port 4000"));
+connectDB().then(()=>{
+    console.log("DataBase Connected.");
+    app.listen(4000, () => console.log("Backend Started on port 4000"));
+}).catch((err)=>{
+    console.log("Error connecting with DB: ",err);
+})
