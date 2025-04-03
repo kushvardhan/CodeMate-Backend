@@ -28,7 +28,8 @@ authRouter.post('/signup',async(req,res)=>{
         res.status(201).json({ message: "User registered successfully." });
 
     }catch(err){
-        throw new Error(err.message);
+        console.error("Signup Error:", err);
+        res.status(400).json({ message: "Invalid request." });
     }
 });
 
@@ -36,7 +37,8 @@ authRouter.post('/login',async(req,res)=>{
     try{
 
     }catch(err){
-        throw new Error(err.message);
+        console.error("Login Error:", err);
+        res.status(400).json({ message: "Invalid request." });
     }
 });
 
@@ -44,7 +46,8 @@ authRouter.post('/logout',userAuth,async(req,res)=>{
     try{
 
     }catch(err){
-        throw new Error(err.message);
+        console.error("Logout Error:", err);
+        res.status(400).json({ message: "Invalid request." });
     }
 });
 
