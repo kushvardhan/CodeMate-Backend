@@ -8,8 +8,24 @@ const {validateSignupData,validateLoginData} = require('../../utils/validation')
 authRouter.post('/signup',async(req,res)=>{
     try{
         validateSignupData(req);
-        
-        const {firstName,lastName,email,password} = req.body;
+
+        const { firstName, lastName, email, password } = req.body;
+
+        const existingUser = await User.findOne({ email });
+        if (existingUser) return res.status(400).json({ message: "Email already exists." });
+
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        const newUser = new User({
+            firstName,
+            lastName,
+            email,
+            password: hashedPassword,
+        });
+
+        await newUser.save();
+
+        res.status(201).json({ message: "User registered successfully." });
 
     }catch(err){
         throw new Error(err.message);
