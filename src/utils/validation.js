@@ -31,8 +31,22 @@ const validateLoginData = (req) => {
     }
 };
 
+const validateProfileData = (req) => {
+    try {
+        if (!req || !req.body) throw new Error('Invalid input.');
+        const allowedEditFields = ["firstName", "lastName", "photoUrl", "gender", "age", "skills", "about"];
+        const invalidFields = Object.keys(req.body).every(field => allowedEditFields.includes(field));
+        
+        return invalidFields;
+        
+    } catch (err) {
+        throw new Error(err.message);
+    }
+};
+ 
 
 module.exports = { 
     validateSignupData,
-    validateLoginData
+    validateLoginData,
+    validateProfileData
 }

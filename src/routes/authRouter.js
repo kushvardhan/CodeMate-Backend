@@ -1,14 +1,22 @@
 const express = require("express");
 const router = express.Router();
 const bcrypt = require("bcrypt");
-const User = require("../models/user"); 
-const {userAuth} = require("../middleware/auth"); 
+const User = require("../models/user");
+const { userAuth } = require("../middleware/auth");
 const {
   validateSignupData,
   validateLoginData,
-} = require("../utils/validation"); 
+} = require("../utils/validation");
+const crypto = require("crypto");
+const nodemailer = require("nodemailer");
 
-
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USER, // Your Gmail address
+    pass: process.env.EMAIL_PASS, // Your Gmail password or app password
+  },
+});
 
 router.post("/signup", async (req, res) => {
   try {
@@ -27,14 +35,16 @@ router.post("/signup", async (req, res) => {
     console.log("Creating new user...");
     const newUser = new User({
       firstName,
-      lastName: lastName ,
+      lastName: lastName,
       email,
       password: hashedPassword,
     });
 
     await newUser.save();
 
-    res.status(201).json({ message: "User registered successfully.",data:newUser });
+    res
+      .status(201)
+      .json({ message: "User registered successfully.", data: newUser });
   } catch (err) {
     console.error("Signup Error:", err);
     res.status(400).json({ message: err.message || "Invalid request." });
@@ -60,12 +70,8 @@ router.post("/login", async (req, res) => {
 
     const token = await user.getJWT();
 
-    console.log("Setting cookie with token...");
     res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "Strict",
-      maxAge: 24 * 60 * 60 * 1000,
+      expires: new Date(Date.now() + 86400000),
     });
 
     res.status(200).json({ message: "Login successful.", token });
@@ -85,6 +91,48 @@ router.post("/logout", userAuth, async (req, res) => {
     res.status(200).json({ message: "Logout successful." });
   } catch (err) {
     res.status(400).json({ message: "Invalid request." });
+  }
+});
+
+router.post("/reset-password/:token", async (req, res) => {
+  try {
+    const { token } = req.params;
+    const { password } = req.body;
+
+    console.log("Reset password request received for token:", token);
+
+    const user = await User.findOne({
+      resetPasswordToken: token,
+      resetPasswordExpires: { $gt: Date.now() }, 
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: "Invalid or expired token." });
+    }
+
+    if (!password || password.trim() === "") {
+      return res.status(400).json({ message: "Password is required." });
+    }
+    if (!validator.isStrongPassword(password)) {
+      return res.status(400).json({
+        message:
+          "Password must be at least 8 characters long, containing at least 1 uppercase, 1 lowercase, 1 number, and 1 special character.",
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    user.password = hashedPassword;
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpires = undefined;
+    await user.save();
+
+    console.log("Password reset successfully for user:", user.email);
+    res.status(200).json({ message: "Password reset successfully." });
+  } catch (err) {
+    console.error("Reset Password Error:", err);
+    res
+      .status(500)
+      .json({ message: "An error occurred. Please try again later." });
   }
 });
 

@@ -58,6 +58,12 @@ const userSchema = new mongoose.Schema({
       }
     },
   },
+  resetPasswordToken: {
+    type: String,
+  },
+  resetPasswordExpires: {
+    type: Date,
+  },
 });
 
 userSchema.methods.getJWT = async function () {
@@ -73,7 +79,5 @@ userSchema.methods.getJWT = async function () {
     throw new Error(err.message);
   }
 };
-
-
 
 module.exports = mongoose.model("User", userSchema);

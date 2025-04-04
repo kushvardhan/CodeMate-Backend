@@ -3,7 +3,10 @@ require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const {connectDB} = require('./config/database');
-const router = require('./routes/authRouter');
+const profileRouter = require('./routes/profileRouter');
+const requestRouter = require('./routes/requestRouter');
+const appRouter = require('./routes/authRouter');
+
 
 const app = express();
 
@@ -12,7 +15,10 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/", router);
+app.use("/", appRouter);
+app.use("/profile", profileRouter);
+app.use("/request", requestRouter);
+
 
 connectDB()
   .then(() => {
