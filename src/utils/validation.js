@@ -19,17 +19,15 @@ const validateSignupData = (req) => {
 
 const validateLoginData = (req) => {
     try {
-        if (!req || !req.body) throw new Error('Invalid credentials.');
 
         const { email, password } = req.body;
 
-        if (typeof email !== 'string' || typeof password !== 'string') throw new Error('Invalid credentials.');
         if (!email.trim() || !password.trim()) throw new Error('Enter credentials.');
-        if (!validator.isEmail(email)) throw new Error('Invalid credentials.');
-        if (password.length < 8) throw new Error('Invalid credentials.');
-
+        if (!validator.isEmail(email)) throw new Error('Invalid email credentials.');
+        if (!validator.isStrongPassword(password)) 
+            throw new Error('Password must be at least 8 characters long, containing at least 1 uppercase, 1 lowercase, 1 number, and 1 special character.');
     } catch (err) {
-        throw new Error('Invalid credentials.'); 
+        throw new Error('Invalid credentials.:'+err.message); 
     }
 };
 

@@ -1,13 +1,26 @@
-const express = require('express');
+const express = require("express");
 require("dotenv").config();
+const cors = require("cors");
+const cookieParser = require("cookie-parser");
+const {connectDB} = require('./config/database');
+const router = require('./routes/authRouter');
 
 const app = express();
 
+app.use(cors());
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.get("/", (req, res) => {
-    res.send("Hey yo");
-});
+app.use("/", router);
 
-app.listen(4000, () => console.log("Backend Started on port 4000"));
+connectDB()
+  .then(() => {
+    console.log("Database connected successfully.");
+    app.listen(4000, () => {
+      console.log("Backend started on port 4000.");
+    });
+  })
+  .catch((err) => {
+    console.error("Error connecting to the database:", err.message);
+  });

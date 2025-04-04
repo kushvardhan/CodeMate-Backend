@@ -1,28 +1,24 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/user');
+const jwt = require("jsonwebtoken");
+const User = require("../models/user"); // Corrected path
 
+const userAuth = async (req, res, next) => {
+  try {
+    const { token } = req.cookies;
+    if (!token) throw new Error("Token not valid!");
+    const decodedObj = await jwt.verify(token, process.env.JWT_SECRET); // Ensure JWT_SECRET is used
+    const { _id } = decodedObj;
 
-const userAuth=async(req,res,next)=>{
-    try{
+    const user = await User.findById(_id);
+    if (!user) throw new Error("User not found");
 
-        const {token} = req.cookies;
-        if(!token) throw new Error('Token not valid!');
-        const decodedObj = await jwt.verify(token,process.env.JWT_SECRET);
-        const {_id} = decodedObj;
+    req.user = user;
 
-        const user = await User.findById(_id);
-        if(!user) throw new Error("User not found");
-
-        req.user = user;
-
-        next();
- 
-    }catch(err){
-        res.json({message:err.message});
-    }
-}
-
+    next();
+  } catch (err) {
+    res.json({ message: err.message });
+  }
+};
 
 module.exports = {
-    userAuth
-}
+  userAuth,
+};
