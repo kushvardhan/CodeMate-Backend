@@ -54,8 +54,7 @@ router.post("/login", async (req, res) => {
     console.log("Validating password...");
     const isPasswordValid = await bcrypt.compare(password, user.password);
     console.log(isPasswordValid);
-    if (isPasswordValid) {
-      console.log("Invalid password for user:",password , " ", user.password);
+    if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
@@ -69,7 +68,6 @@ router.post("/login", async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000,
     });
 
-    console.log("Login successful for user:", email);
     res.status(200).json({ message: "Login successful.", token });
   } catch (err) {
     console.error("Login Error:", err);
@@ -79,12 +77,13 @@ router.post("/login", async (req, res) => {
 
 router.post("/logout", userAuth, async (req, res) => {
   try {
-    console.log("Logout request received for user:", req.user._id);
-    res.clearCookie("token");
-    console.log("User logged out successfully:", req.user._id);
+    res.clearCookie("token", {
+      httpOnly: true,
+      sameSite: "Strict",
+      secure: true,
+    });
     res.status(200).json({ message: "Logout successful." });
   } catch (err) {
-    console.error("Logout Error:", err);
     res.status(400).json({ message: "Invalid request." });
   }
 });
