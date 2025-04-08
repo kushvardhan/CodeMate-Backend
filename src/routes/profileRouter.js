@@ -49,17 +49,14 @@ router.post("/forgot-password", async (req, res) => {
   
       console.log("Forgot password request received for email:", email);
   
-      // Check if the user exists
       const user = await User.findOne({ email });
       if (!user) {
         return res.status(404).json({ message: "User not found." });
       }
   
-      // Generate a reset token
       const resetToken = crypto.randomBytes(32).toString("hex");
-      const resetTokenExpiry = Date.now() + 3600000; // Token valid for 1 hour
+      const resetTokenExpiry = Date.now() + 3600000; 
   
-      // Save the reset token and expiry to the user document
       user.resetPasswordToken = resetToken;
       user.resetPasswordExpires = resetTokenExpiry;
       await user.save();
@@ -67,10 +64,8 @@ router.post("/forgot-password", async (req, res) => {
       console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
   
-      // Create a reset link
       const resetLink = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
   
-      // Configure the email transport
       const transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -79,7 +74,6 @@ console.log("EMAIL_PASS:", process.env.EMAIL_PASS);
         },
       });
   
-      // Send the reset email
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to: email,
