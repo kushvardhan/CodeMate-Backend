@@ -43,7 +43,7 @@ router.patch("/edit", userAuth ,async (req, res) => {
     }
 })
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password",userAuth, async (req, res) => {
     try {
       const { email } = req.body;
   
