@@ -52,7 +52,8 @@ router.get("/request/connections", userAuth, async (req, res) => {
         "about",
         "gender",
         "age",
-      ]).populate("toUserId", [
+      ])
+      .populate("toUserId", [
         "firstName",
         "lastName",
         "photoUrl",
@@ -67,11 +68,11 @@ router.get("/request/connections", userAuth, async (req, res) => {
     }
 
     const connections = connectionRequests.map((request) => {
-        if(request.fromUserId._id.toString() === loggedInUser._id.toString()){
-            return request.toUserId;
-        }else{
-            return request.fromUserId;
-        }
+      if (request.fromUserId._id.toString() === loggedInUser._id.toString()) {
+        return request.toUserId;
+      } else {
+        return request.fromUserId;
+      }
     });
 
     res.status(200).json({
@@ -83,38 +84,64 @@ router.get("/request/connections", userAuth, async (req, res) => {
   }
 });
 
-router.get("/feed?page=:page&limit=:limit",userAuth,async(req,res)=>{
-    try{
-        const loggedInUser = req.user;
+router.get("/feed", userAuth, async (req, res) => {
+  try {
+    const loggedInUser = req.user;
 
-        const page = pareseInt(req.params.page) || 1;
-        const limit = parseInt(req.params.limit) || 10;
-        const skip = (page - 1) * limit;
+    const page = parseInt(req.query.page) || 1;
+    let limit = parseInt(req.query.limit) || 10;
+    limit = limit > 50 ? 50 : limit;
+    const skip = (page - 1) * limit;
 
-        const connectionRequest = await ConnectionRequest.find({
-            $or: [
-                { fromUserId: loggedInUser._id},
-                { toUserId: loggedInUser._id},
-            ],
-        }).select('fromUserId toUserId');
+    const connectionRequests = await ConnectionRequest.find({
+      $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
+    }).select("fromUserId toUserId");
 
-        const hideUserFromFeed = new Set();
-        connectionRequest.forEach((req)=>{
-            hideUserFromFeed.add(req.fromUserId.toString());
-            hideUserFromFeed.add(req.toUserId.toString());
-        })
+    const hideUserFromFeed = new Set();
+    connectionRequests.forEach((request) => {
+      hideUserFromFeed.add(request.fromUserId.toString());
+      hideUserFromFeed.add(request.toUserId.toString());
+    });
 
-        const user = await User.find({
-           $and : [{_id: { $nin: Array.from(hideUserFromFeed) },},
-                   { _id: { $ne: loggedInUser._id } }
-        ],
-        }).select('firstName lastName photoUrl skills about gender age').skip().limit();
+    hideUserFromFeed.add(loggedInUser._id.toString());
 
-        res.json(user);
+    const users = await User.find({
+      _id: { $nin: Array.from(hideUserFromFeed) },
+    })
+      .select([
+        "firstName",
+        "lastName",
+        "photoUrl",
+        "about",
+        "skills",
+        "age",
+        "gender",
+      ])
+      .skip(skip)
+      .limit(limit);
 
-    }catch(err){
-        res.status(500).json({ message: err.message });
-    }
-})
+    const totalUsers = await User.countDocuments({
+      _id: { $nin: Array.from(hideUserFromFeed) },
+    });
+
+    const totalPages = Math.ceil(totalUsers / limit);
+    const hasNextPage = page < totalPages;
+    const hasPrevPage = page > 1;
+
+    res.status(200).json({
+      message: "Users fetched successfully.",
+      data: users,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalUsers,
+        hasNextPage,
+        hasPrevPage,
+      },
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
 
 module.exports = router;
