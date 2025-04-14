@@ -83,9 +83,13 @@ router.get("/request/connections", userAuth, async (req, res) => {
   }
 });
 
-router.get("/feed",userAuth,async(req,res)=>{
+router.get("/feed?page=:page&limit=:limit",userAuth,async(req,res)=>{
     try{
         const loggedInUser = req.user;
+
+        const page = pareseInt(req.params.page) || 1;
+        const limit = parseInt(req.params.limit) || 10;
+        const skip = (page - 1) * limit;
 
         const connectionRequest = await ConnectionRequest.find({
             $or: [
@@ -99,13 +103,12 @@ router.get("/feed",userAuth,async(req,res)=>{
             hideUserFromFeed.add(req.fromUserId.toString());
             hideUserFromFeed.add(req.toUserId.toString());
         })
-        console.log(hideUserFromFeed);
 
         const user = await User.find({
            $and : [{_id: { $nin: Array.from(hideUserFromFeed) },},
                    { _id: { $ne: loggedInUser._id } }
         ],
-        }).select('firstName lastName photoUrl skills about gender age');
+        }).select('firstName lastName photoUrl skills about gender age').skip().limit();
 
         res.json(user);
 
