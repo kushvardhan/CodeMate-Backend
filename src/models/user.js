@@ -68,6 +68,7 @@ const userSchema = new mongoose.Schema({
     type: Date,
   },
 });
+ 
 
 userSchema.methods.getJWT = async function () {
   try {
