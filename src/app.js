@@ -6,6 +6,7 @@ const {connectDB} = require('./config/database');
 const profileRouter = require('./routes/profileRouter');
 const requestRouter = require('./routes/requestRouter');
 const appRouter = require('./routes/authRouter');
+const userRouter = require('./routes/userRouter');
 
 
 const app = express();
@@ -18,6 +19,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/", appRouter);
 app.use("/profile", profileRouter);
 app.use("/request", requestRouter);
+app.use('/user',userRouter);
 
 
 connectDB()
