@@ -74,7 +74,7 @@ router.post("/login", async (req, res) => {
       expires: new Date(Date.now() + 86400000),
     });
 
-    res.status(200).json({ message: "Login successful.", token });
+    res.status(200).json({ message: "Login successful.", user });
   } catch (err) {
     console.error("Login Error:", err);
     res.status(400).json({ message: err.message || "Invalid request." });
