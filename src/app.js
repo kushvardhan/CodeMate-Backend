@@ -2,16 +2,22 @@ const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const {connectDB} = require('./config/database');
-const profileRouter = require('./routes/profileRouter');
-const requestRouter = require('./routes/requestRouter');
-const appRouter = require('./routes/authRouter');
-const userRouter = require('./routes/userRouter');
-
+const { connectDB } = require("./config/database");
+const profileRouter = require("./routes/profileRouter");
+const requestRouter = require("./routes/requestRouter");
+const appRouter = require("./routes/authRouter");
+const userRouter = require("./routes/userRouter");
 
 const app = express();
 
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173", "http://localhost:5174"],
+    credentials: true, 
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -19,8 +25,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use("/", appRouter);
 app.use("/profile", profileRouter);
 app.use("/request", requestRouter);
-app.use('/user',userRouter);
-
+app.use("/user", userRouter);
 
 connectDB()
   .then(() => {
