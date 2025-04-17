@@ -53,7 +53,7 @@ const userSchema = new mongoose.Schema({
   },
   photoUrl: {
     type: String,
-    default: "https://i.imgur.com/KXZRJj4.png", // Cool, modern, tech-themed avatar suitable for all genders
+    default: "https://i.imgur.com/6YQ1Zzt.png", // Clean, geometric profile avatar without text
     validate(value) {
       if (!validator.isURL(value)) {
         throw new Error("Enter a valid URL");
