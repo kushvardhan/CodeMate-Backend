@@ -53,8 +53,7 @@ const userSchema = new mongoose.Schema({
   },
   photoUrl: {
     type: String,
-    default:
-      "https://png.pngitem.com/pimgs/s/508-5087236_tab-profile-f-user-icon-white-fill-hd.png",
+    default: "https://i.imgur.com/KXZRJj4.png", // Cool, modern, tech-themed avatar suitable for all genders
     validate(value) {
       if (!validator.isURL(value)) {
         throw new Error("Enter a valid URL");
@@ -68,7 +67,6 @@ const userSchema = new mongoose.Schema({
     type: Date,
   },
 });
- 
 
 userSchema.methods.getJWT = async function () {
   try {
