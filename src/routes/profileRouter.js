@@ -20,7 +20,7 @@ router.get("/", userAuth ,async (req, res) => {
         const { password, ...userData } = user._doc; 
         res.status(200).json({ message: "User profile fetched successfully.", data: userData });
     }catch(err){
-        res.status(500).json({ message: "Internal server error."+err.message });
+        res.status(400).json({ message: "Unauthorized User, "+err.message });
     }
 })
 
