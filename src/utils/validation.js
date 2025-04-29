@@ -5,10 +5,12 @@ const validateSignupData = (req) => {
     if (!req || !req.body) throw new Error("Invalid input.");
     const { firstName, lastName, email, password } = req.body;
 
-    if (!firstName || !firstName.trim()) throw new Error("First name is required.");
+    if (!firstName || !firstName.trim())
+      throw new Error("First name is required.");
     if (firstName.length < 3 || firstName.length > 20)
       throw new Error("First name must be between 3 and 20 characters.");
-    if (!lastName || !lastName.trim()) throw new Error("Last name is required.");
+    if (!lastName || !lastName.trim())
+      throw new Error("Last name is required.");
     if (!validator.isEmail(email)) throw new Error("Enter a valid email.");
     if (!validator.isStrongPassword(password))
       throw new Error(
@@ -58,13 +60,23 @@ const validateProfileData = (req) => {
       throw new Error("Invalid fields in profile update.");
     }
 
-    const { firstName, lastName, photoUrl, gender, age, skills, about, location } = req.body;
+    const {
+      firstName,
+      lastName,
+      photoUrl,
+      gender,
+      age,
+      skills,
+      about,
+      location,
+    } = req.body;
 
     if (firstName && (firstName.length < 3 || firstName.length > 20))
       throw new Error("First name must be between 3 and 20 characters.");
     if (lastName && (lastName.length < 3 || lastName.length > 20))
       throw new Error("Last name must be between 3 and 20 characters.");
-    if (photoUrl && !validator.isURL(photoUrl)) throw new Error("Invalid photo URL.");
+    if (photoUrl && !validator.isURL(photoUrl))
+      throw new Error("Invalid photo URL.");
     if (gender && !["male", "female", "other"].includes(gender))
       throw new Error("Invalid gender value.");
     if (age && (isNaN(age) || age < 16))
