@@ -61,9 +61,7 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials." });
     }
 
-    console.log("Validating password...");
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    console.log(isPasswordValid);
     if (!isPasswordValid) {
       return res.status(400).json({ message: "Invalid credentials." });
     }
@@ -71,7 +69,9 @@ router.post("/login", async (req, res) => {
     const token = await user.getJWT();
 
     res.cookie("token", token, {
-      expires: new Date(Date.now() + 86400000),
+      httpOnly: true,
+      sameSite: "Strict",
+      secure: process.env.NODE_ENV === "production",
     });
 
     res.status(200).json({ message: "Login successful.", user });
@@ -86,7 +86,7 @@ router.post("/logout", userAuth, async (req, res) => {
     res.clearCookie("token", {
       httpOnly: true,
       sameSite: "Strict",
-      secure: true,
+      secure: process.env.NODE_ENV === "production",
     });
     res.status(200).json({ message: "Logout successful." });
   } catch (err) {
