@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
     type: Number,
     min: 16,
   },
+  location : {
+    type: String,
+    minlength : 2,
+    maxLength: 100,
+  },
   about: {
     type: String,
   },
