@@ -92,7 +92,6 @@ router.get("/feed", userAuth, async (req, res) => {
     let limit = parseInt(req.query.limit) || 10;
     limit = limit > 50 ? 50 : limit;
     const skip = (page - 1) * limit;
-    
 
     const connectionRequests = await ConnectionRequest.find({
       $or: [{ fromUserId: loggedInUser._id }, { toUserId: loggedInUser._id }],
@@ -142,6 +141,23 @@ router.get("/feed", userAuth, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
+  }
+});
+
+// Route to fetch the authenticated user's details
+router.get("/me", userAuth, async (req, res) => {
+  try {
+    const user = req.user; // `userAuth` middleware attaches the user to `req`
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Exclude sensitive fields like password
+    const { password, ...userData } = user._doc;
+    res.status(200).json({ user: userData });
+  } catch (err) {
+    console.error("Error fetching user details:", err);
+    res.status(500).json({ message: "Internal server error." });
   }
 });
 
