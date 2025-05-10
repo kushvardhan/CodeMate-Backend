@@ -1,12 +1,14 @@
 const express = require("express");
 require("dotenv").config();
 const cors = require("cors");
+const http = require('http');
 const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const profileRouter = require("./routes/profileRouter");
 const requestRouter = require("./routes/requestRouter");
 const appRouter = require("./routes/authRouter");
 const userRouter = require("./routes/userRouter");
+const initialzeSocket = require('./utils/Socket');
 
 const app = express();
 
@@ -27,10 +29,13 @@ app.use("/profile", profileRouter);
 app.use("/request", requestRouter);
 app.use("/user", userRouter);
 
+const server = http.createServer(app);
+initialzeSocket(server);
+
 connectDB()
   .then(() => {
     console.log("Database connected successfully.");
-    app.listen(4000, () => {
+    server.listen(4000, () => {
       console.log("Backend started on port 4000.");
     });
   })
