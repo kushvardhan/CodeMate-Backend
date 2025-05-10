@@ -13,7 +13,6 @@ const initialzeSocket = (server) => {
 
     socket.on("joinChat", (data) => {
       const { loggedInUserId, userId } = data;
-      console.log("User joined chat:", data);
       const roomName = [loggedInUserId, userId].sort().join("-");
       socket.join(roomName);
       console.log(`User ${loggedInUserId} joined room: ${roomName}`);
