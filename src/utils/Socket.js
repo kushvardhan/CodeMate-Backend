@@ -12,11 +12,10 @@ const initialzeSocket = (server) => {
   const activeConnections = new Map();
 
   io.on("connection", (socket) => {
-
     socket.on("joinChat", (data) => {
-      const { firstName,loggedInUserId, userId } = data;
+      const { firstName, loggedInUserId, userId } = data;
 
-      if ( !firstName || !loggedInUserId || !userId) {
+      if (!loggedInUserId || !userId) {
         console.error("Invalid data for joinChat:", data);
         return;
       }
@@ -43,27 +42,39 @@ const initialzeSocket = (server) => {
     });
 
     socket.on("sendMessage", (data) => {
-      const { senderId, receiverId, content } = data;
+      const { senderFirstName, senderId, receiverId, content } = data;
 
       if (!senderId || !receiverId || !content) {
         console.error("Invalid data for sendMessage:", data);
         return;
       }
 
-      console.log("Message received:", data);
+      console.log(
+        `Message received from ${senderId} to ${receiverId}: "${content}"`
+      );
 
+      // Create a unique room name by sorting the IDs
       const roomName = [senderId, receiverId].sort().join("-");
+
+      // Log the room name and active connections
+      console.log(`Broadcasting to room: ${roomName}`);
+      console.log(
+        `Active connections: ${Array.from(activeConnections.keys()).length}`
+      );
 
       // Emit the message to everyone in the room except the sender
       socket.to(roomName).emit("receiveMessage", {
+        senderFirstName,
         senderId,
         content,
         timestamp: new Date().toISOString(),
       });
+
+      // Also log the message to the console for debugging
+      console.log(`Message sent to room ${roomName}: "${content}"`);
     });
 
     socket.on("disconnect", () => {
-      // Get the user's connection info
       const connectionInfo = activeConnections.get(socket.id);
 
       if (connectionInfo) {
