@@ -1,4 +1,19 @@
 const socket = require("socket.io");
+const crypto = require("crypto");
+
+/**
+ * Generate a secure room name from two user IDs
+ * @param {string} userId1 - First user ID
+ * @param {string} userId2 - Second user ID
+ * @returns {string} - Secure room name hash
+ */
+const generateSecureRoomName = (userId1, userId2) => {
+  const sortedIds = [userId1, userId2].sort().join("-");
+
+  const hash = crypto.createHash("sha256").update(sortedIds).digest("hex");
+
+  return hash.substring(0, 16);
+};
 
 const initialzeSocket = (server) => {
   const io = socket(server, {
@@ -20,8 +35,8 @@ const initialzeSocket = (server) => {
         return;
       }
 
-      // Create a unique room name by sorting the IDs
-      const roomName = [loggedInUserId, userId].sort().join("-");
+      // Create a secure room name using crypto
+      const roomName = generateSecureRoomName(loggedInUserId, userId);
 
       // Store the user's connection info
       activeConnections.set(socket.id, {
@@ -53,8 +68,8 @@ const initialzeSocket = (server) => {
         `Message received from ${senderId} to ${receiverId}: "${content}"`
       );
 
-      // Create a unique room name by sorting the IDs
-      const roomName = [senderId, receiverId].sort().join("-");
+      // Create a secure room name using crypto
+      const roomName = generateSecureRoomName(senderId, receiverId);
 
       // Log the room name and active connections
       console.log(`Broadcasting to room: ${roomName}`);
