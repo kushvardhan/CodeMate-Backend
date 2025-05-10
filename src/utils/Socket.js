@@ -1,5 +1,6 @@
 const socket = require("socket.io");
 const crypto = require("crypto");
+const Chat = require("../models/chat");
 
 /**
  * Generate a secure room name from two user IDs
@@ -56,8 +57,10 @@ const initialzeSocket = (server) => {
       });
     });
 
-    socket.on("sendMessage", (data) => {
-      const { senderFirstName, senderId, receiverId, content } = data;
+    socket.on("sendMessage", async(data) => {
+      try{
+
+              const { senderFirstName, senderId, receiverId, content } = data;
 
       if (!senderId || !receiverId || !content) {
         console.error("Invalid data for sendMessage:", data);
@@ -68,25 +71,43 @@ const initialzeSocket = (server) => {
         `Message received from ${senderId} to ${receiverId}: "${content}"`
       );
 
-      // Create a secure room name using crypto
       const roomName = generateSecureRoomName(senderId, receiverId);
-
-      // Log the room name and active connections
       console.log(`Broadcasting to room: ${roomName}`);
+
       console.log(
         `Active connections: ${Array.from(activeConnections.keys()).length}`
       );
 
-      // Emit the message to everyone in the room except the sender
+        const chat = await Chat.findOne({
+          participants: { $all: [senderId, receiverId] },
+        });
+        if(!chat){
+          chat = new Chat({
+            participants: [senderId, receiverId],
+            messages: [],
+          });
+        }
+
+        chat.messages.push({
+          senderId,
+          text: content,
+        })
+
+        await chat.save();
+
+
       socket.to(roomName).emit("receiveMessage", {
         senderFirstName,
         senderId,
         content,
         timestamp: new Date().toISOString(),
       });
-
-      // Also log the message to the console for debugging
       console.log(`Message sent to room ${roomName}: "${content}"`);
+
+      }catch(err){
+        console.error("Error broadcasting message:", err);
+      }
+
     });
 
     socket.on("disconnect", () => {
