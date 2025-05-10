@@ -12,12 +12,11 @@ const initialzeSocket = (server) => {
   const activeConnections = new Map();
 
   io.on("connection", (socket) => {
-    console.log("A user connected:", socket.id);
 
     socket.on("joinChat", (data) => {
-      const { loggedInUserId, userId } = data;
+      const { firstName,loggedInUserId, userId } = data;
 
-      if (!loggedInUserId || !userId) {
+      if ( !firstName || !loggedInUserId || !userId) {
         console.error("Invalid data for joinChat:", data);
         return;
       }
@@ -27,13 +26,14 @@ const initialzeSocket = (server) => {
 
       // Store the user's connection info
       activeConnections.set(socket.id, {
+        firstName,
         userId: loggedInUserId,
         roomName: roomName,
       });
 
       // Join the room
       socket.join(roomName);
-      console.log(`User ${loggedInUserId} joined room: ${roomName}`);
+      console.log(`${firstName} ${loggedInUserId} joined room: ${roomName}`);
 
       // Notify the room that a user has joined
       socket.to(roomName).emit("userJoined", {
