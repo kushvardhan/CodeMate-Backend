@@ -24,7 +24,6 @@ const initialzeSocket = (server) => {
     },
   });
 
-  // Store active connections
   const activeConnections = new Map();
 
   io.on("connection", (socket) => {
@@ -49,13 +48,11 @@ const initialzeSocket = (server) => {
           roomName: roomName,
         });
 
-        // Join the room
         socket.join(roomName);
         console.log(
           `${firstName || "User"} (${loggedInUserId}) joined room: ${roomName}`
         );
 
-        // Check if there's an existing chat in the database
         try {
           const existingChat = await Chat.findOne({
             participants: { $all: [loggedInUserId, userId] },
@@ -75,17 +72,14 @@ const initialzeSocket = (server) => {
           }
         } catch (dbError) {
           console.error("Error checking for existing chat:", dbError);
-          // Non-critical error, continue with socket connection
         }
 
-        // Notify the room that a user has joined
         socket.to(roomName).emit("userJoined", {
           userId: loggedInUserId,
           firstName: firstName || "User",
           timestamp: new Date().toISOString(),
         });
 
-        // Confirm to the user that they've joined successfully
         socket.emit("joinedChat", {
           roomName,
           timestamp: new Date().toISOString(),
@@ -119,7 +113,6 @@ const initialzeSocket = (server) => {
           `Active connections: ${Array.from(activeConnections.keys()).length}`
         );
 
-        // Find existing chat or create a new one
         let chat = await Chat.findOne({
           participants: { $all: [senderId, receiverId] },
         });
@@ -132,14 +125,12 @@ const initialzeSocket = (server) => {
           });
         }
 
-        // Add the new message
         chat.messages.push({
           senderId,
           text: content,
           createdAt: new Date(), 
         });
 
-        // Save the chat to database
         await chat.save();
 
         socket.to(roomName).emit("receiveMessage", {
@@ -152,7 +143,6 @@ const initialzeSocket = (server) => {
       } catch (err) {
         console.error("Error processing message:", err);
 
-        // Send error notification to the sender if possible
         try {
           socket.emit("messageError", {
             error: "Failed to process message",
@@ -172,7 +162,6 @@ const initialzeSocket = (server) => {
         if (connectionInfo) {
           const { userId, roomName, firstName } = connectionInfo;
 
-          // Safely notify the room that a user has left
           try {
             socket.to(roomName).emit("userLeft", {
               userId: userId,
@@ -186,7 +175,6 @@ const initialzeSocket = (server) => {
             );
           }
 
-          // Remove the connection from our map
           activeConnections.delete(socket.id);
 
           console.log(
@@ -195,7 +183,6 @@ const initialzeSocket = (server) => {
             } (${userId}) disconnected from room: ${roomName}`
           );
 
-          // Log active connections after disconnect
           console.log(
             `Remaining active connections: ${activeConnections.size}`
           );
