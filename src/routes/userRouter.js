@@ -147,12 +147,11 @@ router.get("/feed", userAuth, async (req, res) => {
 // Route to fetch the authenticated user's details
 router.get("/me", userAuth, async (req, res) => {
   try {
-    const user = req.user; // `userAuth` middleware attaches the user to `req`
+    const user = req.user; 
     if (!user) {
       return res.status(404).json({ message: "User not found." });
     }
 
-    // Exclude sensitive fields like password
     const { password, ...userData } = user._doc;
     res.status(200).json({ user: userData });
   } catch (err) {
