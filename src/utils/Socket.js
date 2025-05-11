@@ -30,10 +30,8 @@ const initialzeSocket = (server) => {
   io.on("connection", (socket) => {
     socket.on("joinChat", async (data) => {
       try {
-        // Safely extract data with defaults
-        const { firstName = "User", loggedInUserId, userId } = data || {};
+        const { firstName , loggedInUserId, userId } = data || {};
 
-        // Validate required fields
         if (!loggedInUserId || !userId) {
           console.error("Invalid data for joinChat:", data);
           socket.emit("joinError", {
@@ -43,10 +41,8 @@ const initialzeSocket = (server) => {
           return;
         }
 
-        // Create a secure room name using crypto
         const roomName = generateSecureRoomName(loggedInUserId, userId);
 
-        // Store the user's connection info
         activeConnections.set(socket.id, {
           firstName,
           userId: loggedInUserId,
@@ -69,6 +65,9 @@ const initialzeSocket = (server) => {
             console.log(
               `No existing chat found for ${loggedInUserId} and ${userId}, will create on first message`
             );
+
+
+
           } else {
             console.log(
               `Found existing chat with ${existingChat.messages.length} messages`
@@ -137,7 +136,7 @@ const initialzeSocket = (server) => {
         chat.messages.push({
           senderId,
           text: content,
-          createdAt: new Date(), // Add timestamp for the message
+          createdAt: new Date(), 
         });
 
         // Save the chat to database
