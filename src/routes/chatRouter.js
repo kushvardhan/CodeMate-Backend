@@ -28,11 +28,11 @@ router.get('/getChat/:userId',userAuth,async(req,res)=>{
             path: 'messages.senderId',
             select: 'firstName lastName photoUrl',
           }) ;
-          
+
             await chat.save();
           }
 
-          res.status(200).json(chat);
+          res.status(200).json(chat.messages);
 
     }catch(err){
         res.status(500).json({ message: err.message });
