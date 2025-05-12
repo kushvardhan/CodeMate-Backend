@@ -144,6 +144,16 @@ router.get("/feed", userAuth, async (req, res) => {
   }
 });
 
+router.get("/chatUser/:id", userAuth, async (req, res) => {
+  try{
+    const {id} = req.params;
+    const user = await User.findById(id);
+    res.status(200).json({ message: "User fetched successfully.", data: user });
+  }catch(err){
+    console.log('error ',err);
+  }
+});
+
 // Route to fetch the authenticated user's details
 router.get("/me", userAuth, async (req, res) => {
   try {
