@@ -144,7 +144,7 @@ router.get("/feed", userAuth, async (req, res) => {
   }
 });
 
-router.get("/chatUser/:id", userAuth, async (req, res) => {
+router.post("/chatUser/:id", userAuth, async (req, res) => {
   try{
     const {id} = req.params;
     const user = await User.findById(id);
