@@ -41,30 +41,52 @@ router.get('/getChat/:userId', userAuth, async (req, res) => {
     }
 });
 
-// GET /chat/unseen-counts/:userId
+
 router.get("/unseen-counts/:userId", async (req, res) => {
   const { userId } = req.params;
 
-  const chats = await Chat.find({ participants: userId });
+  try {
+    // Step 1: Find chats where user is a participant
+    const chats = await Chat.find({ participants: userId })
+      .populate("participants", "firstName lastName photoUrl") // For other user info
+      .populate("messages.senderId", "firstName lastName photoUrl"); // For sender info inside each message
 
-  const unseenCounts = chats.map(chat => {
-    const otherUser = chat.participants.find(id => id.toString() !== userId);
+    const unseenCounts = chats.map(chat => {
+      const otherUser = chat.participants.find(p => p._id.toString() !== userId);
 
-    const unseen = chat.messages.filter(msg =>
-      msg.senderId.toString() !== userId &&
-      (!msg.seen || msg.seen.get(userId) === false)
-    );
-    console.log("unseen: ", unseen);
-    return {
-      chatId: chat._id,
-      userId: otherUser,
-      unseenCount: unseen.length
-    };
-  });
+      // Step 2: Filter only unseen messages not sent by the current user
+      const unseenMessages = chat.messages.filter(msg =>
+        msg.senderId._id.toString() !== userId &&
+        (!msg.seen || msg.seen.get(userId) === false)
+      );
 
-  res.json({ data: unseenCounts });
+      return {
+        chatId: chat._id,
+        userId: otherUser._id,
+        userInfo: {
+          name: `${otherUser.firstName} ${otherUser.lastName || ""}`.trim(),
+          photoUrl: otherUser.photoUrl || "",
+        },
+        unseenCount: unseenMessages.length,
+        unseenMessages: unseenMessages.map(msg => ({
+          _id: msg._id,
+          text: msg.text,
+          createdAt: msg.createdAt,
+          sender: {
+            _id: msg.senderId._id,
+            name: `${msg.senderId.firstName} ${msg.senderId.lastName || ""}`,
+            photoUrl: msg.senderId.photoUrl || "",
+          },
+        })),
+      };
+    });
+
+    res.json({ data: unseenCounts });
+  } catch (error) {
+    console.error("Error fetching unseen messages:", error);
+    res.status(500).json({ message: "Server error while fetching unseen counts" });
+  }
 });
-
 
 
 module.exports = router;
