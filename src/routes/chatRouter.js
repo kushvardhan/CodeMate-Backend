@@ -46,15 +46,13 @@ router.get("/unseen-counts/:userId", async (req, res) => {
   const { userId } = req.params;
 
   try {
-    // Step 1: Find chats where user is a participant
     const chats = await Chat.find({ participants: userId })
-      .populate("participants", "firstName lastName photoUrl") // For other user info
-      .populate("messages.senderId", "firstName lastName photoUrl"); // For sender info inside each message
+      .populate("participants", "firstName lastName photoUrl")
+      .populate("messages.senderId", "firstName lastName photoUrl");
 
     const unseenCounts = chats.map(chat => {
       const otherUser = chat.participants.find(p => p._id.toString() !== userId);
 
-      // Step 2: Filter only unseen messages not sent by the current user
       const unseenMessages = chat.messages.filter(msg =>
         msg.senderId._id.toString() !== userId &&
         (!msg.seen || msg.seen.get(userId) === false)
@@ -64,7 +62,7 @@ router.get("/unseen-counts/:userId", async (req, res) => {
         chatId: chat._id,
         userId: otherUser._id,
         userInfo: {
-          name: `${otherUser.firstName} ${otherUser.lastName || ""}`.trim(),
+          name: `${otherUser.firstName} ${otherUser.lastName || ""}`,
           photoUrl: otherUser.photoUrl || "",
         },
         unseenCount: unseenMessages.length,
@@ -76,15 +74,16 @@ router.get("/unseen-counts/:userId", async (req, res) => {
             _id: msg.senderId._id,
             name: `${msg.senderId.firstName} ${msg.senderId.lastName || ""}`,
             photoUrl: msg.senderId.photoUrl || "",
-          },
+          }
         })),
       };
     });
 
-    res.json({ data: unseenCounts });
-  } catch (error) {
-    console.error("Error fetching unseen messages:", error);
-    res.status(500).json({ message: "Server error while fetching unseen counts" });
+    console.log("UN backend: ", unseenCounts);
+    res.status(200).json({ data: unseenCounts });
+  } catch (err) {
+    console.error("Error in unseen-counts route:", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
