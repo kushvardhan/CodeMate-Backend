@@ -41,5 +41,30 @@ router.get('/getChat/:userId', userAuth, async (req, res) => {
     }
 });
 
+// GET /chat/unseen-counts/:userId
+router.get("/unseen-counts/:userId", async (req, res) => {
+  const { userId } = req.params;
+
+  const chats = await Chat.find({ participants: userId });
+
+  const unseenCounts = chats.map(chat => {
+    const otherUser = chat.participants.find(id => id.toString() !== userId);
+
+    const unseen = chat.messages.filter(msg =>
+      msg.senderId.toString() !== userId &&
+      (!msg.seen || msg.seen.get(userId) === false)
+    );
+    console.log("unseen: ", unseen);
+    return {
+      chatId: chat._id,
+      userId: otherUser,
+      unseenCount: unseen.length
+    };
+  });
+
+  res.json({ data: unseenCounts });
+});
+
+
 
 module.exports = router;
