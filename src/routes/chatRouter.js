@@ -42,6 +42,7 @@ router.get('/getChat/:userId', userAuth, async (req, res) => {
 });
 
 
+
 router.get("/unseen-counts/:userId", async (req, res) => {
   const { userId } = req.params;
 
@@ -50,21 +51,30 @@ router.get("/unseen-counts/:userId", async (req, res) => {
       .populate("participants", "firstName lastName photoUrl")
       .populate("messages.senderId", "firstName lastName photoUrl");
 
+    const allData = [];
+
     const unseenCounts = chats.map(chat => {
       const otherUser = chat.participants.find(p => p._id.toString() !== userId);
 
       const unseenMessages = chat.messages.filter(msg =>
         msg.senderId._id.toString() !== userId &&
-        (!msg.seen || msg.seen.get(userId) === false)
+        (!msg.seen || msg.seen[userId] === false)
       );
 
-      return {
+      const data = {
         chatId: chat._id,
-        userId: otherUser._id,
+        userId: otherUser?._id,
         userInfo: {
-          name: `${otherUser.firstName} ${otherUser.lastName || ""}`,
-          photoUrl: otherUser.photoUrl || "",
+          name: `${otherUser?.firstName || ""} ${otherUser?.lastName || ""}`,
+          photoUrl: otherUser?.photoUrl || "",
         },
+        allMessages: chat.messages.map(m => ({
+          _id: m._id,
+          text: m.text,
+          senderId: m.senderId._id,
+          seen: m.seen,
+          createdAt: m.createdAt
+        })),
         unseenCount: unseenMessages.length,
         unseenMessages: unseenMessages.map(msg => ({
           _id: msg._id,
@@ -77,9 +87,24 @@ router.get("/unseen-counts/:userId", async (req, res) => {
           }
         })),
       };
-    });
 
-    console.log("UN backend: ", unseenCounts);
+      allData.push(data);
+
+      return {
+        chatId: data.chatId,
+        userId: data.userId,
+        userInfo: data.userInfo,
+        unseenCount: data.unseenCount,
+        unseenMessages: data.unseenMessages
+      };
+    }).filter(chat => chat.unseenCount > 0);
+
+    console.log("\n============== DEBUG LOG ==============");
+    console.log("UserID:", userId);
+    console.log("All Chat Data with All Messages:\n", JSON.stringify(allData, null, 2));
+    console.log("Final Filtered unseenCounts:\n", JSON.stringify(unseenCounts, null, 2));
+    console.log("=======================================\n");
+
     res.status(200).json({ data: unseenCounts });
   } catch (err) {
     console.error("Error in unseen-counts route:", err);

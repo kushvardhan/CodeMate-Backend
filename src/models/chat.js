@@ -10,11 +10,12 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    seen:{
-        type: Map,
-        of: Boolean,
-        default: {},
-    }
+    seen: {
+  type: Map,
+  of: Boolean,
+  default: {},
+}
+
 },{timestamps: true});
 
 const chatSchema = new mongoose.Schema({
