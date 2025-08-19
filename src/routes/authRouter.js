@@ -9,6 +9,7 @@ const {
 } = require("../utils/validation");
 const crypto = require("crypto");
 const nodemailer = require("nodemailer");
+const validator = require("validator");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
