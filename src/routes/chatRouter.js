@@ -229,4 +229,45 @@ router.get("/chat-list", userAuth, async (req, res) => {
   }
 });
 
+// Mark messages as seen
+router.post("/mark-seen/:userId", userAuth, async (req, res) => {
+  try {
+    const { userId } = req.params; // The other user's ID
+    const loggedInUserId = req.user._id;
+
+    // Find the chat between these two users
+    const chat = await Chat.findOne({
+      participants: { $all: [loggedInUserId, userId] },
+    });
+
+    if (!chat) {
+      return res.status(404).json({ message: "Chat not found" });
+    }
+
+    // Mark all messages from the other user as seen by the logged-in user
+    let hasUpdates = false;
+    chat.messages.forEach((message) => {
+      // Only mark messages from the other user as seen
+      if (message.senderId.toString() === userId.toString()) {
+        if (!message.seen.get(loggedInUserId.toString())) {
+          message.seen.set(loggedInUserId.toString(), true);
+          hasUpdates = true;
+        }
+      }
+    });
+
+    if (hasUpdates) {
+      await chat.save();
+      console.log(
+        `Marked messages as seen for user ${loggedInUserId} in chat with ${userId}`
+      );
+    }
+
+    res.status(200).json({ message: "Messages marked as seen" });
+  } catch (error) {
+    console.error("Error marking messages as seen:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 module.exports = router;
