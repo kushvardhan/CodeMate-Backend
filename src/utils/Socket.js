@@ -19,17 +19,57 @@ const generateSecureRoomName = (userId1, userId2) => {
 const initialzeSocket = (server) => {
   const io = socket(server, {
     cors: {
-      origin: "http://localhost:5173",
+      origin: ["http://localhost:5173", "http://localhost:5174"],
       credentials: true,
     },
+    pingTimeout: 60000,
+    pingInterval: 25000,
+    transports: ['websocket', 'polling'],
   });
 
   const activeConnections = new Map();
+  const userRooms = new Map(); // Track user rooms for real-time updates
 
   io.on("connection", (socket) => {
+    console.log(`New socket connection: ${socket.id}`);
+
+    // Handle joining user room for real-time updates
+    socket.on("joinUserRoom", (data) => {
+      try {
+        const { userId } = data;
+        if (!userId) {
+          console.error("Invalid data for joinUserRoom:", data);
+          return;
+        }
+
+        const userRoom = `user_${userId}`;
+        socket.join(userRoom);
+        userRooms.set(socket.id, { userId, userRoom });
+
+        console.log(`User ${userId} joined user room: ${userRoom}`);
+      } catch (error) {
+        console.error("Error in joinUserRoom handler:", error);
+      }
+    });
+
+    // Handle unseen count updates
+    socket.on("unseenCountUpdate", (data) => {
+      try {
+        const { userId, chatPartnerId } = data;
+        if (!userId) return;
+
+        // Emit to the user's room for real-time updates
+        const userRoom = `user_${userId}`;
+        socket.to(userRoom).emit("unseenCountUpdate", { userId });
+
+        console.log(`Unseen count update emitted for user ${userId}`);
+      } catch (error) {
+        console.error("Error in unseenCountUpdate handler:", error);
+      }
+    });
     socket.on("joinChat", async (data) => {
       try {
-        const { firstName , loggedInUserId, userId } = data || {};
+        const { firstName, loggedInUserId, userId } = data || {};
 
         if (!loggedInUserId || !userId) {
           console.error("Invalid data for joinChat:", data);
@@ -62,9 +102,6 @@ const initialzeSocket = (server) => {
             console.log(
               `No existing chat found for ${loggedInUserId} and ${userId}, will create on first message`
             );
-
-
-
           } else {
             console.log(
               `Found existing chat with ${existingChat.messages.length} messages`
@@ -128,7 +165,7 @@ const initialzeSocket = (server) => {
         chat.messages.push({
           senderId,
           text: content,
-          createdAt: new Date(), 
+          createdAt: new Date(),
         });
 
         await chat.save();
@@ -139,6 +176,19 @@ const initialzeSocket = (server) => {
           content,
           timestamp: new Date().toISOString(),
         });
+
+        // Emit real-time updates for unseen counts and chat lists
+        const receiverRoom = `user_${receiverId}`;
+        socket.to(receiverRoom).emit("receiveMessage", {
+          senderFirstName,
+          senderId,
+          content,
+          timestamp: new Date().toISOString(),
+        });
+        socket
+          .to(receiverRoom)
+          .emit("unseenCountUpdate", { userId: receiverId });
+
         console.log(`Message sent to room ${roomName}: "${content}"`);
       } catch (err) {
         console.error("Error processing message:", err);
@@ -158,6 +208,7 @@ const initialzeSocket = (server) => {
     socket.on("disconnect", () => {
       try {
         const connectionInfo = activeConnections.get(socket.id);
+        const userRoomInfo = userRooms.get(socket.id);
 
         if (connectionInfo) {
           const { userId, roomName, firstName } = connectionInfo;
@@ -182,13 +233,21 @@ const initialzeSocket = (server) => {
               firstName || "Unknown"
             } (${userId}) disconnected from room: ${roomName}`
           );
-
-          console.log(
-            `Remaining active connections: ${activeConnections.size}`
-          );
-        } else {
-          console.log("User disconnected (unknown user)");
         }
+
+        if (userRoomInfo) {
+          const { userId, userRoom } = userRoomInfo;
+          userRooms.delete(socket.id);
+          console.log(`User ${userId} left user room: ${userRoom}`);
+        }
+
+        if (!connectionInfo && !userRoomInfo) {
+          console.log("Socket disconnected (unknown user)");
+        }
+
+        console.log(
+          `Remaining active connections: ${activeConnections.size}, user rooms: ${userRooms.size}`
+        );
       } catch (error) {
         console.error("Error handling disconnect:", error);
       }
