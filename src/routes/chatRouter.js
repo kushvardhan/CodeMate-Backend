@@ -261,6 +261,21 @@ router.post("/mark-seen/:userId", userAuth, async (req, res) => {
       console.log(
         `Marked messages as seen for user ${loggedInUserId} in chat with ${userId}`
       );
+
+      // Emit socket event to update unseen counts in real-time
+      const io = req.app.get('io');
+      if (io) {
+        // Notify the user who marked messages as seen
+        const userRoom = `user_${loggedInUserId}`;
+        io.to(userRoom).emit("unseenCountUpdate", { userId: loggedInUserId });
+
+        // Also notify the sender that their messages were seen
+        const senderRoom = `user_${userId}`;
+        io.to(senderRoom).emit("messagesSeen", {
+          viewerId: loggedInUserId,
+          chatPartnerId: userId
+        });
+      }
     }
 
     res.status(200).json({ message: "Messages marked as seen" });
