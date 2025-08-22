@@ -24,7 +24,7 @@ const initialzeSocket = (server) => {
     },
     pingTimeout: 60000,
     pingInterval: 25000,
-    transports: ['websocket', 'polling'],
+    transports: ["websocket", "polling"],
   });
 
   const activeConnections = new Map();
@@ -253,6 +253,8 @@ const initialzeSocket = (server) => {
       }
     });
   });
+
+  return io;
 };
 
 module.exports = initialzeSocket;
