@@ -6,7 +6,7 @@ const cookieParser = require("cookie-parser");
 const { connectDB } = require("./config/database");
 const profileRouter = require("./routes/profileRouter");
 const requestRouter = require("./routes/requestRouter");
-const appRouter = require("./routes/authRouter");
+const authRouter = require("./routes/authRouter");
 const userRouter = require("./routes/userRouter");
 const chatRouter = require("./routes/chatRouter");
 const initialzeSocket = require("./utils/Socket");
@@ -15,7 +15,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: ["https://code-mate-frontend-drab.vercel.app/", "https://code-mate-frontend-drab.vercel.app/"],
+    origin: ["http://localhost:5173", "https://code-mate-frontend-drab.vercel.app/"],
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -25,7 +25,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/", appRouter);
+app.use("/", authRouter);
 app.use("/profile", profileRouter);
 app.use("/request", requestRouter);
 app.use("/user", userRouter);
