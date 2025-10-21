@@ -19,7 +19,7 @@ const generateSecureRoomName = (userId1, userId2) => {
 const initialzeSocket = (server) => {
   const io = socket(server, {
     cors: {
-      origin: ["http://localhost:5173", "http://localhost:5174"],
+      origin: ["https://code-mate-frontend-drab.vercel.app/", "https://code-mate-frontend-drab.vercel.app/"],
       credentials: true,
     },
     pingTimeout: 60000,
