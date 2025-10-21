@@ -19,7 +19,7 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-router.post("/signup", async (req, res) => {
+router.post("signup", async (req, res) => {
   try {
     console.log("Signup request received:", req.body);
     validateSignupData(req);
