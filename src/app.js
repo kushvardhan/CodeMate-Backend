@@ -40,8 +40,8 @@ app.set("io", io);
 connectDB()
   .then(() => {
     console.log("Database connected successfully.");
-    server.listen(4000, () => {
-      console.log("Backend started on port 4000.");
+    server.listen(process.env.PORT || 4000, () => {
+      console.log(`Backend started on port ${process.env.PORT || 4000}.`);
     });
   })
   .catch((err) => {
